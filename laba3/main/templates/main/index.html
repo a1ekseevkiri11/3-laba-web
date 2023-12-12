@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laba 2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href={% static "css/style.css" %}>
+</head>
+<body>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <header>
+      <div class="d-flex flex-column flex-md-row align-items-center pb-3 mb-4 border-bottom">
+        <a href="https://github.com/a1ekseevkiri11/laba_python_web" class="d-flex align-items-center link-body-emphasis text-decoration-none">
+          <img src={% static "images/github.svg" %}>
+          <span class="fs-4">a1ekseevkiri11</span>
+        </a>
+      </div>
+    </header>
+    <form method="post" id="calculator" action="{% url 'calculator' %}">
+      {% csrf_token %}
+      <input type="text" name="screen" id="screen" required>
+      <table id="keyboard">
+          <tr>
+              <td><button type="button">7</button></td>
+              <td><button type="button">8</button></td>
+              <td><button type="button">9</button></td>
+              <td><button type="button">AC</button></td>
+          </tr>
+          <tr>
+              <td><button type="button">4</button></td>
+              <td><button type="button">5</button></td>
+              <td><button type="button">6</button></td>
+              <td><button type="button">*</button></td>
+          </tr>
+          <tr>
+              <td><button type="button">1</button></td>
+              <td><button type="button">2</button></td>
+              <td><button type="button">3</button></td>
+              <td><button type="button">-</button></td>
+          </tr>
+          <tr>
+              <td><button type="button" id="equals">=</button></td>
+              <td><button type="button">0</button></td>
+              <td><button type="button">/</button></td>
+              <td><button type="button">+</button></td>
+          </tr>
+      </table>
+  </form>
+  <script>
+    const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    const sign = ["+", "-", "/", "*"];
+
+    class Calculator{
+        constructor(){
+            this.scrin_block = document.getElementById("screen");
+            this.write("");
+            this.initInput();
+        }
+        
+        initInput(){
+            let buttons = document.querySelectorAll("button");
+            
+            for(let i = 0; i < buttons.length; i++){
+                buttons[i].addEventListener("click", (e) => {
+                    let key = e.target.textContent;
+                    if(digits.includes(key)){
+                        if(this.scrin_block.value.length === 10){
+                            return;
+                        }
+                        if(this.scrin_block.valuel === "0"){
+                            this.cutLastCharScrinBlock();
+                        }
+                        let new_screen_val = this.scrin_block.value + key;
+                        this.write(new_screen_val);
+                        return;
+                    }
+                    if(sign.includes(key)){
+                        if(sign.includes(this.scrin_block.value.at(-1))){
+                            this.cutLastCharScrinBlock();
+                        }
+                        let new_screen_val = this.scrin_block.value + key;
+                        this.write(new_screen_val);
+                        return;
+                    }
+                    if(key === "AC"){
+                        this.write("");
+                        return;
+                    }
+                });
+            }
+        }
+
+        cutLastCharScrinBlock(){
+            let new_string =  this.scrin_block.value.slice(0, -1);
+            write(new_string);
+        }
+
+        write(new_screen_val){
+            this.scrin_block.value = new_screen_val;
+        }
+    }
+
+
+    const APP = new Calculator();
+
+     $(document).ready(function () {
+        $('#equals').click(function () {
+            // Получаем значение с экрана
+            var expression = $('#screen').val();
+
+            // Получаем CSRF-токен из куки
+            var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+
+            // Отправляем запрос на сервер
+            $.ajax({
+                url: "/calculator/",
+                type: "POST",
+                data: { screen: expression },
+                headers: { "X-CSRFToken": csrftoken },
+                dataType: 'json',
+                success: function (data) {
+                    // Обновляем экран результатом
+                    $('#screen').val(data.result);
+                    APP.write(data.result);
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+  </script>
+</body>
+</html>
